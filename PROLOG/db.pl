@@ -40,7 +40,7 @@ is_even(X) :-
     Y is X//2, X =:= 2 * Y.
 
 what_grade(5) :-
-        write('You\'re gay!'),nl,write('Die!').
+        write('You\'re pretty!'),nl,write('!').
 
 related(X,Y) :-
     parent(X,Y).
