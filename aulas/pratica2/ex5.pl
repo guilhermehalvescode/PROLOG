@@ -12,20 +12,13 @@ deAviao(paris,losAngeles).
 deAviao(bangkok,auckland).
 deAviao(losAngeles,auckland).
 
-viagem(X, Y, Z) :- 
+viagem(X, Y, vai(X, Y)) :-
     deCarro(X, Y);
     deTrem(X, Y);
     deAviao(X, Y).
 
-viagem(X, Y, Z) :-
-    deCarro(X, Z),
-    viagem(Z, Y).
-
-viagem(X, Y, Z) :-
-    deTrem(X, Z),
-    viagem(Z, Y).
-
-viagem(X, Y, Z) :-
-    deAviao(X, Z),
-    viagem(Z, Y).
-    
+viagem(X, Y, vai(X, Z, K)) :-
+    (deCarro(X ,Z);
+    deTrem(X, Z);
+    deAviao(X , Z)),
+    viagem(Z, Y, K).

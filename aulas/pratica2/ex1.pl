@@ -1,7 +1,6 @@
 %a
-sobre(livro, mesa).
-sobre(caneta, livro).
-sobre(borracha, livro).
+sobre(a, mesa).
+sobre(b, a).
 
 %b
 acima_de(X, Y) :- sobre(X, Y).

@@ -18,14 +18,9 @@ viagem(X, Y) :-
     deAviao(X, Y).
 
 viagem(X, Y) :-
-    deCarro(X, Z),
+    (deCarro(X, Z);
+    deAviao(X, Z);
+    deTrem(X, Z)),
     viagem(Z, Y).
 
-viagem(X, Y) :-
-    deTrem(X, Z),
-    viagem(Z, Y).
-
-viagem(X, Y) :-
-    deAviao(X, Z),
-    viagem(Z, Y).
     
