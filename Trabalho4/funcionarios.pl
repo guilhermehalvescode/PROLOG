@@ -1,3 +1,5 @@
+:- load_files(db, [if(not_loaded), silent(true)]).
+
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
 :- use_module(library(http/html_write)).
@@ -5,13 +7,11 @@
 :- use_module(library(http/html_head)).
 :- use_module(library(http/http_server_files)).
 
-
-:- multifile user:file_search_path/2.
-        user:file_search_path(css, './dir_css').
-
-
 server(Port) :- 
     http_server(http_dispatch, [port(Port)]).
+
+:- initialization(server(8000)).
+
 
 :- http_handler(css(.), serve_files_in_directory(css), [prefix]).
 :- http_handler(root(.), home, []).
@@ -27,6 +27,48 @@ cadastro(post, Pedido) :-
     reply_html_page([title('Controle de Gastos de Clientes | Funcionario')],
                     [\resposta(Pedido)]).
 
+resposta(Pedido) -->
+    {
+        catch(
+            http_parameters(Pedido, [
+                nome(Nome, [atom, length > 0]),
+                user(User, [atom, length > 0]),
+                password(Pass, [atom, length > 0]),
+                func(Func, [number, integer]),
+                address(Rua, [atom, length > 0]),
+                addressnum(Numrua, [number, integer]),
+                comp(Complemento, [atom, length > 0]),
+                bairro(Bairro, [atom, length > 0]),
+                city(City, [atom, length > 0]),
+                cep(Cep, [atom, length > 0]),
+                tel1(Tel1, [atom, length > 0]),
+                tel2(Tel2, [atom, length > 0])
+            ]), 
+        _E, fail), !,
+        (funcao:funcao(Func, Dsfun, true),
+        cadastra_funcionario(CdFun, Nome, User, Pass, Func, Rua, Numrua, 
+            Complemento, Bairro, City, Cep, Tel1, Tel2))
+    },
+    html([
+        p('Seu codigo e ~w' - CdFun),
+        p('Seu nome e ~w' - Nome),
+        p('Seu usuario e ~w' - User),
+        p('Sua senha e ~w' - Pass),
+        p('Sua funcao e ~w' - Dsfun),
+        p('Seu endereco e ~w, ~w' - [Rua, Numrua]),
+        p('O complemento e ~w' - Complemento),
+        p('Sua cidade e ~w' - City),
+        p('Seu bairro e ~w' - Bairro),
+        p('Seu CEP e ~w' - Cep),
+        p('Seu primeiro telefone e ~w' - Tel1),
+        p('Seu segundo telefone e ~w' - Tel2)
+        ]).
+
+resposta(_Pedido) -->
+    html([h1('Erro'),
+        p('Formulario com parametros errados!')
+        ]).
+
 metas -->
     html(meta([name(viewport), content('width=device-width, initial-scale=1.0, shrink-to-fit=no')], [])).
 
@@ -35,7 +77,6 @@ links -->
     link([rel(stylesheet), href('https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css'), 
     integrity('sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z'), crossorigin('anonymous')], []),
     \html_requires(css('cadastro.css'))]).
-
 
 navbar --> 
     html(nav([class('navbar navbar-expand-lg navbar-light bg-light')], 
@@ -72,11 +113,11 @@ page -->
                     form([method('post'), action('/cadfun')], [
                         div([class('form-group')], [
                             label([for(nome)], 'Nome'),
-                            input([name(nome), type(name), class('form-control'), id(nome), placeholder('')], [])
+                            input([name(nome), type(text), class('form-control'), id(nome), placeholder('')], [])
                         ]),
                         div([class('form-group')], [
                             label([for(usuario)], 'Usuario'),
-                            input([name(user) ,type(name), class('form-control'), id(usuario), placeholder('')], [])
+                            input([name(user) ,type(text), class('form-control'), id(usuario), placeholder('')], [])
                         ]),
                         div([class('form-group')], [
                             label([for(senha)], 'Senha'),
@@ -85,11 +126,11 @@ page -->
                         div([class('form-group')], [
                             label([for(inputState)], 'Funcao'),
                             select([name(func), id('inputState'), class('form-control')], [
-                                option([value(administrador), selected], 'Administrador'),
-                                option([value(balconista)], 'Balconista'),
-                                option([value(bolsista)], 'Bolsista'),
-                                option([value(gerente)], 'Gerente'),
-                                option([value(motoboy)], 'Motoboy')
+                                option([value(1), selected], 'Administrador'),
+                                option([value(2)], 'Balconista'),
+                                option([value(3)], 'Bolsista'),
+                                option([value(4)], 'Gerente'),
+                                option([value(5)], 'Motoboy')
                             ]),
                             hr([]),
                             div([class(row)], [
@@ -117,17 +158,17 @@ page -->
                             div([class(row)], [
                                 div([class(col)], [
                                     label([for(cep)], 'CEP'),
-                                    input([name(cep), type(number), class('form-control'), id(cep), placeholder('')], [])
+                                    input([name(cep), type(text), class('form-control'), id(cep), placeholder('')], [])
                                 ])
                             ]),
                             div([class(row)], [
                                 div([class(col)], [
                                     label([for(telefone1)], 'Telefone 1'),
-                                    input([name(tel1), type(number), class('form-control'), id(telefone1), placeholder('')], [])
+                                    input([name(tel1), type(text), class('form-control'), id(telefone1), placeholder('')], [])
                                 ]),
                                 div([class(col)], [
                                     label([for(telefone2)], 'Telefone 2'),
-                                    input([name(tel2), type(number), class('form-control'), id(telefone2), placeholder('')], [])
+                                    input([name(tel2), type(text), class('form-control'), id(telefone2), placeholder('')], [])
                                 ])
                             ])
                         ]),
@@ -167,38 +208,3 @@ scripts -->
     script([src('https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js'), 
                   integrity('sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV'),
                   crossorigin('anonymous')], [])]).
-
-resposta(Pedido) -->
-    {
-        catch(
-            http_parameters(Pedido,
-                [nome(Nome, [string]),
-                user(User, [string]),
-                password(Pass, [string]),
-                func(Func, [string]),
-                address(Rua, [string]),
-                addressnum(Numrua, [number]),
-                comp(Complemento, [string]),
-                cep(Cep, [string]),
-                tel1(Tel1, [string]),
-                tel2(Tel2, [string])
-            ]), 
-        _E, fail), !    
-    },
-    html([
-        p('Seu nome e ~w' - Nome),
-        p('Seu usuario e ~w' - User),
-        p('Sua senha e ~w' - Pass),
-        p('Sua funcao e ~w' - Func),
-        p('Seu endereco e ~w, ~w' - [Rua, Numrua]),
-        p('O complemento enviado e ~w' - Complemento),
-        p('Seu CEP e ~w' - Cep),
-        p('Seu primeiro telefone e ~w' - Tel1),
-        p('Seu segundo telefone e ~w' - Tel2)
-        
-        ]).
-
-resposta(_Pedido) -->
-    html([h1('Erro'),
-        p('Formulario com parametros errados!')
-        ]).
